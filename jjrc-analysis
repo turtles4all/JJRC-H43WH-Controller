@@ -1,0 +1,92 @@
+// JJRC H37 Drone Controller 
+// Initial findings
+// 
+// Drone <> Controll APP
+// << to drone
+// >> to app
+
+****
+Commands wanted, fill in as confirmed.
+Init = 
+ON
+ARM = 
+calibrate
+Autoheight
+
+Launch
+land
+L
+R
+F
+B
+RL
+RR
+
+****
+
+TCP Traffic:
+
+2: handshake completed for port 8888, nothing more
+4: ??
+	<< 00:01:02:03:04:05:06:07:08:09:25:25
+	>> 6e:6f:61:63:74:0d:0a "noact"
+
+5:connection reset and APP sends 00:01:02:03:04:05:06:07:08:09:28:28 seeming to start video stream.
+<< 00:01:02:03:04:05:06:07:08:09:28:28
+>> ~1500 byte packets every 
+
+UDP Traffic:
+
+1: video negotiation??
+	<< connection to 8080 0x0f
+	>> 55:44:50:37:32:30:50 "UDP720P"
+	<< 0x28
+	>> 56:32:2e:33:2e:34 "V2.3.4"
+	<< 26:e2:07:00:00:02:00:00:00:03:00:00:00:06:00:00:00:15:00:00:00:07:00:00:00:2e:00:00:00 //TCP handshake follows after this
+
+3: ??
+	>> 74:69:6d:65:6f:6b "timeok"
+	<< 26:e2:07:00:00:02:00:00:00:03:00:00:00:06:00:00:00:15:00:00:00:07:00:00:00:2f:00:00:00 //-4 byte inc by 1 
+	<< 26:e2:07:00:00:02:00:00:00:03:00:00:00:06:00:00:00:15:00:00:00:07:00:00:00:30:00:00:00 // -4 byte inc by 1
+	<< 26:e2:07:00:00:02:00:00:00:03:00:00:00:06:00:00:00:15:00:00:00:07:00:00:00:31:00:00:00 // seems to send ever 2 seconds bounts to 0x3b then resets and add 1 to byte 22
+
+<< 1a
+>> 6d:69:72:72:6f:72:3d:31 "mirror=1"
+
+<< ff:08:00:3f:40:3f:10:10:10:00:09 //on?
+<< ff:08:7e:3f:40:3f:90:10:10:00:0b //should be auto height mode?
+
+//revision 1
+
+<< 26:e2:07:00:00:02:00:00:00:03:00:00:00:06:00:00:00:15:00:00:00:07:00:00:00:31:00:00:00 
+	// 29 byte array confirmed to be sent every 2 seconds where [25] counts from 0x0 to 0x3b then increments [21] by 1, seems to act as a "keep-alive" or "controller anouncment"
+
+<< ff:08:00:3f:40:3f:10:10:10:00:09
+	// 11 byte array fonfirmed to signal the drone to be "ON" and wait for more conmands. 
+************************
+ff:08:00:3f:40:3f:10:10:10:01:08 //%60
+ff:08:00:3f:40:3f:10:10:10:02:07 //%100
+ff:08:7e:3f:40:3f:90:10:10:02:09 //%100 and auto launch
+ff:08:7e:3f:40:3f:90:10:10:00:0b //%30 and auto launch
+ff:08:7e:3f:40:3f:90:10:10:42:c9 //start props
+ff:08:f8:30:40:3f:90:10:10:02:9e //Launch 
+ff:08:7e:3f:40:3f:90:10:10:82:89 //auto land / stop of not launched
+ff:08:7e:3f:40:3f:d0:10:10:02:c9 //calibrate
+ff:08:7e:3f:44:7e:90:10:10:00:c8 //full right when not running
+ff:08:U/D:3f:41:00:90:10:10:00:49
+ff:08:U/D:3f:41:00:90:10:10:00:49 // E-stop
+
+ff:08:U/D:Rotate:F/B:L/R:CMD:10:10:00:49
+
+F/B 0-7f, 0 forward, 7f back
+L/R 0-7f, 0 left, 7f right 
+rotate 0 left, 7f right 
+U/D 0-fa, moddle/hover = 7e
+************************
+
+
+
+
+
+
+
