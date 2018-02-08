@@ -1,5 +1,5 @@
 # JJRC-drone-control
 
-Working toward having full control via pc and then porting to arduino.
+This is no where near complete at this time. The current issue is finding the checksum algorithm for the UDP payloads.
 
-Current issue is finding the checksum algorithm for the UDP payloads. 
+The simple XOR of usefull bytes does not seem to work on this platform.  
