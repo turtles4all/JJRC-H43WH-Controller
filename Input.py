@@ -1,17 +1,37 @@
 #!/usr/bin/env python
+"""
+Code to test:
+	import sys
+	import tty
+	import termios
 
+	fd = sys.stdin.fileno()
+	old_settings = termios.tcgetattr(fd)
+	tty.setraw(sys.stdin)
+
+	for i in range(0, 10):
+	    print("ASD")
+
+	termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+	Also: https://stackoverflow.com/questions/2408560/python-nonblocking-console-input
+	
+"""
+# Imports
+import pygame
 import socket
 from time import sleep
 
-# The IP of the quadcopter plus the UDP port it listens to for control commands
+# The IP of the quadcopter
 #IPADDR = '172.16.10.1'
+
+# Useing Loopback with netcat listeners for testing
 IPADDR = '127.0.0.1'
 UDPPORTNUM = 8080
 TCPPORTNUM = 8888
 
 INIT = '26e207000002000000030000000600000015000000070000002c000000'.decode('hex')
 START = 'ff08003f403f1010100009'.decode('hex') 
-
 ARM = 'ff087e3f403f9010100209'.decode('hex')
 CAL = 'ff087e3f403fd0101002c9'.decode('hex')
 SPINUP = 'ff087e3f403f90101042c9'.decode('hex')
@@ -23,11 +43,6 @@ CAL_KEY    = 'C'
 SPIN_KEY   = 'S'
 LAUNCH_KEY = 'PAGE UP'
 LAND_KEY   = 'PAGE DOWN'
-
-# coding=utf-8
-
-# imports the Pygame library
-import pygame
 
 
 def main():
