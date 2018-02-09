@@ -1,134 +1,126 @@
-#!/usr/bin/env python
 """
-Code to test:
-	import sys
-	import tty
-	import termios
+Controls:
+	W/A/S/D - Up, Down, Rotate Left, Rotate Right
 
-	fd = sys.stdin.fileno()
-	old_settings = termios.tcgetattr(fd)
-	tty.setraw(sys.stdin)
+	arrow keys: 
+	Up/Down/Left/Right - Forward, Bacwards, Left, Right
+	Commands / Modes
+	E-Stop - ESC
 
-	for i in range(0, 10):
-	    print("ASD")
-
-	termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-	Also: https://stackoverflow.com/questions/2408560/python-nonblocking-console-input
-	
 """
-# Imports
 import pygame
-import socket
+from pygame.locals import *
 from time import sleep
 
-# The IP of the quadcopter
-#IPADDR = '172.16.10.1'
 
-# Useing Loopback with netcat listeners for testing
-IPADDR = '127.0.0.1'
-UDPPORTNUM = 8080
-TCPPORTNUM = 8888
-
-INIT = '26e207000002000000030000000600000015000000070000002c000000'.decode('hex')
-START = 'ff08003f403f1010100009'.decode('hex') 
-ARM = 'ff087e3f403f9010100209'.decode('hex')
-CAL = 'ff087e3f403fd0101002c9'.decode('hex')
-SPINUP = 'ff087e3f403f90101042c9'.decode('hex')
-LAUNCH = 'ff08f830403f901010029e'.decode('hex')
-LAND = 'ff087e3f403f9010108289'.decode('hex')
-
-START_KEY  = 'A'
-CAL_KEY    = 'C'
-SPIN_KEY   = 'S'
-LAUNCH_KEY = 'PAGE UP'
-LAND_KEY   = 'PAGE DOWN'
+# Calculate UDP payload Checksum
+def chksum(stuff):
+    c = 0
+    for x in stuff[1:]:
+        c = c + x
+    return ((stuff[0] ^ c) % 256)
 
 
-def main():
-    # initializes Pygame
-    pygame.init()
-
-    # sets the window title
-    pygame.display.set_caption(u'Keyboard events')
-
-    # sets the window size
-    pygame.display.set_mode((100, 100))
-    SEND = 0
-    # infinite loop
-    pygame.key.set_repeat(50, 50)
-    while True:
-        # gets a single event from the event queue
-        event = pygame.event.poll()
-
-	    # captures the 'KEYDOWN' and 'KEYUP' events
-        if event.type in (pygame.KEYDOWN, pygame.KEYUP):
-	        # gets the key name
-	        key_name = pygame.key.name(event.key)
-
-	        # converts to uppercase the key name
-	        key_name = key_name.upper()
-
-	        # if any key is pressed
-	        if event.type == pygame.KEYDOWN:
-	            # prints on the console the key pressed
-	            #print u'"{}" key pressed'.format(key_name)
-				if key_name == START_KEY:
-					print("START")
-					SEND = 1
-					s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
-					t = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-					s.connect((IPADDR, UDPPORTNUM))
-					for n in range(0,10): 
-						print("sending INIT")
-						s.send(INIT)
-						sleep(0.05) 
-					t.connect((IPADDR, TCPPORTNUM))
-					CMD = ARM
-
-				if key_name == CAL_KEY:
-					print("CAL")
-					for n in range(0,5): 
-						print("sending Calibrate")
-						s.send(CAL)
-						sleep(0.05)
-					sleep(2)
-
-				if key_name == SPIN_KEY:
-					print("SPINUP")
-					CMD = SPINUP
-
-				if key_name == LAUNCH_KEY:
-					print("LAUNCH")
-					CMD = LAUNCH
-
-				if key_name == LAND_KEY:
-					print("LAND")
-					CMD = LAND
-
-				if key_name == 'Q':
-					print("E-STOP")
-					for n in range(0,5): 
-						print("sending LAND")
-						s.send(LAND)
-						sleep(0.02)
-					t.close()
-					s.close()
-					pygame.quit()
-                    
-	
-		if SEND == 1:
-			s.send(CMD)
-	        # if any key is released
-	        #elif event.type == pygame.KEYUP:
-	            # prints on the console the released key
-	         #   print u'"{}" key released'.format(key_name)
-	
-		
-
-    # finalizes Pygame
-    pygame.quit()
+def display(banner, str):
+    text = font.render(str, True, (255, 255, 255), (159, 182, 205))
+    banner = font.render(banner, True, (255, 255, 255), (159, 182, 205))
+    bannerRect = banner.get_rect()
+    textRect = text.get_rect()
+    textRect.centerx = screen.get_rect().centerx
+    textRect.centery = screen.get_rect().centery
+    bannerRect.centerx = screen.get_rect().centerx
+    bannerRect.centery += 100
+    screen.blit(banner, bannerRect)
+    screen.blit(text, textRect)
+    pygame.display.update()
 
 
-if __name__ == '__main__':
-    main()
+pygame.init()
+screen = pygame.display.set_mode((640, 480))
+pygame.display.set_caption('Drone Control')
+screen.fill((159, 182, 205))
+
+font = pygame.font.Font(None, 17)
+
+done = False
+flags = {"U": 0, "D": 0, "F": 0, "B": 0, "L": 0, "R": 0, "RL": 0, "RR": 0}
+
+while not done:
+    # Base values for movment data
+    UD = 0x7f
+    LR = 0x3f
+    FB = 0x3f
+    ROT = 0x3f
+    banner = "Place flight modes here"
+    dispFlags = " U:" + str(flags["U"]) + " D:" + str(flags["D"]) + " RL:" + str(flags["RL"]) + " RR:" + \
+                str(flags["RR"]) + " F:" + str(flags["F"]) + " B:" + str(flags["B"]) + " L:" + str(flags["L"]) + \
+                " R:" + str(flags["R"])
+    
+    display(banner, dispFlags)
+
+    pygame.event.pump()
+    keys = pygame.key.get_pressed()
+    if keys[K_ESCAPE]:
+        done = True
+    # UP
+    if keys[K_w]:
+        flags["U"] = 1
+        UD += 0x10
+    else:
+        flags["U"] = 0
+
+    # Down
+    if keys[K_s]:
+        flags["D"] = 1
+        UD -= 0x10
+    else:
+        flags["D"] = 0
+
+    # Rotate Left
+    if keys[K_a]:
+        flags["RL"] = 1
+        ROT -= 0x10
+    else:
+        flags["RL"] = 0
+
+    # Rotate Right
+    if keys[K_d]:
+        flags["RR"] = 1
+        ROT += 0x10
+    else:
+        flags["RR"] = 0
+
+    # Forward
+    if keys[K_UP]:
+        flags["F"] = 1
+        FB += 0x10
+
+    else:
+        flags["F"] = 0
+
+    # Backwards
+    if keys[K_DOWN]:
+        flags["B"] = 1
+        FB -= 0x10
+    else:
+        flags["B"] = 0
+
+    # Left
+    if keys[K_LEFT]:
+        flags["L"] = 1
+        LR -= 0x10
+    else:
+        flags["L"] = 0
+
+    # Right
+    if keys[K_RIGHT]:
+        flags["R"] = 1
+        LR += 0x10
+    else:
+        flags["R"] = 0
+
+    packet = [0xff, 0x08, UD, ROT, FB, LR, 0x90, 0x10, 0x10, 0x42]
+    chk = chksum(packet)
+    packet.append(chk)
+    print(packet)
+    sleep(.05)
