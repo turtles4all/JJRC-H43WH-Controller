@@ -2,19 +2,41 @@
 
 """
 Controls:
-        W/A/S/D - Up, Down, Rotate Left, Rotate Right
-
-        arrow keys: 
-        Up/Down/Left/Right - Forward, Bacwards, Left, Right
-        Commands / Modes
-        E-Stop - ESC
-
+	W/A/S/D - Up, Down, Rotate Left, Rotate Right
+	Arrow keys 
+	Up/Down/Left/Right - Forward, Bacwards, Left, Right
+	
+	Commands / Modes:
+	E-Stop - ESC
+	Launch - Page Up
+	Land - Page Down
 """
 
 import socket
 import pygame
 from pygame.locals import *
 from time import sleep
+
+# Key mappings
+Forward_key = K_UP
+Back_key    = K_DOWN
+Left_key    = K_LEFT
+Right_Key   = K_RIGHT
+Up_key      = K_w
+Down_Key    = K_s
+RotateL_key = K_a
+RotateR_key = K_d
+# Command Keys
+Launch_key  = 
+Land_key    = 
+Cal_key     = 
+Exit_key    = 
+#trim keys
+FB_trim_k   = 
+LR_trim_k   =
+ROT_trim_k  =
+#Speed
+
 
 INIT = '26e207000002000000030000000600000015000000070000002c000000'.decode('hex')
 START = 'ff08003f403f1010100009'.decode('hex')
@@ -37,7 +59,6 @@ def start():
         sleep(0.05)
     s.send(INIT)
 
-
 def calibrate():
     for n in range(0, 10):
         print("sending Calibrate")
@@ -46,7 +67,6 @@ def calibrate():
     s.send(INIT)
     sleep(2)
     s.send(INIT)
-
 
 def launcher():
     for n in range(0, 10):
@@ -59,11 +79,11 @@ def launcher():
         s.send(SPINUP)
         sleep(0.05)
     s.send(INIT)
+    sleep(.5)
     for n in range(0, 10):
         print("sending LAUNCH")
         s.send(LAUNCH)
         sleep(0.05)
-
 
 def land():
     for n in range(0, 10):
@@ -139,6 +159,7 @@ while not done:
     display(dispFlags)
     pygame.event.pump()
     keys = pygame.key.get_pressed()
+
 
 
     if keys[K_PAGEUP]:
