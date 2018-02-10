@@ -2,12 +2,12 @@
 
 """
 Controls:
-	W/A/S/D - Up, Down, Rotate Left, Rotate Right
+        W/A/S/D - Up, Down, Rotate Left, Rotate Right
 
-	arrow keys: 
-	Up/Down/Left/Right - Forward, Bacwards, Left, Right
-	Commands / Modes
-	E-Stop - ESC
+        arrow keys: 
+        Up/Down/Left/Right - Forward, Bacwards, Left, Right
+        Commands / Modes
+        E-Stop - ESC
 
 """
 
@@ -37,6 +37,7 @@ def start():
         sleep(0.05)
     s.send(INIT)
 
+
 def calibrate():
     for n in range(0, 10):
         print("sending Calibrate")
@@ -45,6 +46,7 @@ def calibrate():
     s.send(INIT)
     sleep(2)
     s.send(INIT)
+
 
 def launcher():
     for n in range(0, 10):
@@ -61,6 +63,7 @@ def launcher():
         print("sending LAUNCH")
         s.send(LAUNCH)
         sleep(0.05)
+
 
 def land():
     for n in range(0, 10):
@@ -136,7 +139,6 @@ while not done:
     display(dispFlags)
     pygame.event.pump()
     keys = pygame.key.get_pressed()
-
 
 
     if keys[K_PAGEUP]:
