@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Controls:
 	W/A/S/D - Up, Down, Rotate Left, Rotate Right
@@ -101,8 +103,8 @@ flags = {"U": 0, "D": 0, "F": 0, "B": 0, "L": 0, "R": 0, "RL": 0, "RR": 0}
 modes = "Place flight modes here"
 
 
-#IPADDR = '172.16.10.1'
-IPADDR = '127.0.0.1'
+IPADDR = '172.16.10.1'
+#IPADDR = '127.0.0.1'
 UDPPORTNUM = 8080
 TCPPORTNUM = 8888
 
@@ -153,62 +155,61 @@ while not done:
     # UP
     if keys[K_w]:
         flags["U"] = 1
-        UD += 0x10
+        UD += 0x30
     else:
         flags["U"] = 0
 
     # Down
     if keys[K_s]:
         flags["D"] = 1
-        UD -= 0x10
+        UD -= 0x30
     else:
         flags["D"] = 0
 
     # Rotate Left
     if keys[K_a]:
         flags["RL"] = 1
-        ROT -= 0x10
+        ROT -= 0x30
     else:
         flags["RL"] = 0
 
     # Rotate Right
     if keys[K_d]:
         flags["RR"] = 1
-        ROT += 0x10
+        ROT += 0x30
     else:
         flags["RR"] = 0
 
     # Forward
     if keys[K_UP]:
         flags["F"] = 1
-        FB += 0x10
-
+        FB -= 0x20
     else:
         flags["F"] = 0
 
     # Backwards
     if keys[K_DOWN]:
         flags["B"] = 1
-        FB -= 0x10
+        FB += 0x20
     else:
         flags["B"] = 0
 
     # Left
     if keys[K_LEFT]:
         flags["L"] = 1
-        LR -= 0x10
+        LR -= 0x30
     else:
         flags["L"] = 0
 
     # Right
     if keys[K_RIGHT]:
         flags["R"] = 1
-        LR += 0x10
+        LR += 0x30
     else:
         flags["R"] = 0
 
     if flying:
-        data = 0xff, 0x08, UD, ROT, FB, LR, 0x90, 0x10, 0x10, 0x42
+        data = 0xff, 0x08, UD, ROT, FB, LR, 0x90, 0x10, 0x10, 0x02
         checksum = crunch(data)
         packet = ''.join(chr(x) for x in data) + checksum
         s.send(packet)
