@@ -27,16 +27,19 @@ Down_Key    = K_s
 RotateL_key = K_a
 RotateR_key = K_d
 # Command Keys
-Launch_key  = 
-Land_key    = 
-Cal_key     = 
-Exit_key    = 
-#trim keys
-FB_trim_k   = 
-LR_trim_k   =
-ROT_trim_k  =
-#Speed
-
+Launch_key  = K_PAGEUP
+Land_key    = K_PAGEDOWN
+Cal_key     = K_F1
+Exit_key    = K_ESCAPE
+# trim keys
+F_trim_k   = K_KP8
+B_trim_k   = K_KP2
+L_trim_k   = K_KP4
+R_trim_k   = K_KP5
+# Speed
+Inc_speed_k = K_KP_PLUS
+Dec_speed_k = K_KP_MINUS
+Turbo_k = K_F12
 
 INIT = '26e207000002000000030000000600000015000000070000002c000000'.decode('hex')
 START = 'ff08003f403f1010100009'.decode('hex')
@@ -126,8 +129,8 @@ flags = {"U": 0, "D": 0, "F": 0, "B": 0, "L": 0, "R": 0, "RL": 0, "RR": 0}
 modes = "Place flight modes here"
 
 
-IPADDR = '172.16.10.1'
-#IPADDR = '127.0.0.1'
+#IPADDR = '172.16.10.1'
+IPADDR = '127.0.0.1'
 UDPPORTNUM = 8080
 TCPPORTNUM = 8888
 
@@ -143,7 +146,7 @@ calibrate()
 
 counter = 0
 flying = False
-
+SPEED = 0x00
 while not done:
 
     # Base values for movement data
@@ -151,8 +154,10 @@ while not done:
     LR = 0x3f
     FB = 0x3f
     ROT = 0x3f
+    FBT = 0x00
+    LRT = 0x00
 
-    dispFlags = " U:" + str(flags["U"]) + " D:" + str(flags["D"]) + " RL:" + str(flags["RL"]) + " RR:" + \
+    dispFlags = "SPEED:"+hex(SPEED)+" U:" + str(flags["U"]) + " D:" + str(flags["D"]) + " RL:" + str(flags["RL"]) + " RR:" + \
                 str(flags["RR"]) + " F:" + str(flags["F"]) + " B:" + str(flags["B"]) + " L:" + str(flags["L"]) + \
                 " R:" + str(flags["R"])
 
@@ -161,77 +166,96 @@ while not done:
     keys = pygame.key.get_pressed()
 
 
-
-    if keys[K_PAGEUP]:
+    if keys[Launch_key]:
         flying = True
         launcher()
 
-    if keys[K_PAGEDOWN]:
+    if keys[Land_key]:
         flying = False
         land()
 
     # land and exit
-    if keys[K_ESCAPE]:
+    if keys[Exit_key]:
         flying = False
         land()
         done = True
     # UP
-    if keys[K_w]:
+    if keys[Up_key]:
         flags["U"] = 1
-        UD += 0x30
+        UD += 0x30 + SPEED
     else:
         flags["U"] = 0
 
     # Down
-    if keys[K_s]:
+    if keys[Down_Key]:
         flags["D"] = 1
-        UD -= 0x30
+        UD -= 0x30  + SPEED
     else:
         flags["D"] = 0
 
     # Rotate Left
-    if keys[K_a]:
+    if keys[RotateL_key]:
         flags["RL"] = 1
-        ROT -= 0x30
+        ROT -= 0x30 + SPEED
     else:
         flags["RL"] = 0
 
     # Rotate Right
-    if keys[K_d]:
+    if keys[RotateR_key]:
         flags["RR"] = 1
-        ROT += 0x30
+        ROT += 0x30 + SPEED
     else:
         flags["RR"] = 0
 
     # Forward
-    if keys[K_UP]:
+    if keys[Forward_key]:
         flags["F"] = 1
-        FB -= 0x20
+        FB -= 0x20 + SPEED
     else:
         flags["F"] = 0
 
     # Backwards
-    if keys[K_DOWN]:
+    if keys[Back_key]:
         flags["B"] = 1
-        FB += 0x20
+        FB += 0x20 + SPEED
     else:
         flags["B"] = 0
 
     # Left
-    if keys[K_LEFT]:
+    if keys[Left_key]:
         flags["L"] = 1
-        LR -= 0x30
+        LR -= 0x30 + SPEED
     else:
         flags["L"] = 0
 
     # Right
-    if keys[K_RIGHT]:
+    if keys[Right_Key]:
         flags["R"] = 1
-        LR += 0x30
+        LR += 0x30 + SPEED
     else:
         flags["R"] = 0
+    # Trim
+    if keys[F_trim_k]:
+        flags["R"] = 1
+        FBT -= 0x1
+    if keys[B_trim_k]:
+        flags["R"] = 1
+        FBT += 0x1
 
+    if keys[L_trim_k]:
+        flags["R"] = 1
+        LRT -= 0x1
+    if keys[R_trim_k]:
+        flags["R"] = 1
+        LRT += 0x1
+
+    if keys[Inc_speed_k] & (SPEED <= 0xC0):
+        SPEED += 0x08
+    if keys[Dec_speed_k] & (SPEED != 0x00):
+        SPEED -= 0x08
+    print(hex(SPEED +0x30))
     if flying:
+
         data = 0xff, 0x08, UD, ROT, FB, LR, 0x90, 0x10, 0x10, 0x02
         checksum = crunch(data)
         packet = ''.join(chr(x) for x in data) + checksum
